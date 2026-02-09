@@ -1,0 +1,590 @@
+import React, { useState } from 'react';
+import { 
+  Search, 
+  ChefHat, 
+  Clock, 
+  Flame, 
+  ArrowLeft, 
+  Moon, 
+  Maximize2,
+  Pencil,
+  Plus,
+  Trash2,
+  Save,
+  Users,
+  Camera,
+  Utensils,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  FileText,
+  X
+} from 'lucide-react';
+
+// --- モックデータ ---
+const SAMPLE_RECIPES = [
+  {
+    id: 1,
+    title: "豚バラと白菜のレンジ蒸し",
+    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800",
+    tags: ["豚肉", "白菜", "レンジ", "時短", "和食"],
+    servings: "2人分",
+    metadata: {
+      estimatedTime: "10分",
+      calories: "350kcal"
+    },
+    ingredients: [
+      { name: "豚バラ薄切り肉", quantity: "200g" },
+      { name: "白菜", quantity: "1/4株" },
+      { name: "酒", quantity: "大さじ2" },
+      { name: "鶏ガラスープの素", quantity: "小さじ1" },
+      { name: "塩こしょう", quantity: "少々" },
+      { name: "ポン酢", quantity: "適量" },
+      { name: "小ねぎ", quantity: "適量" }
+    ],
+    steps: [
+      "白菜は3-4cm幅のざく切りにする。豚肉は5cm幅に切る。",
+      "耐熱容器に白菜の半量を敷き詰め、その上に豚肉の半量を広げて乗せる。",
+      "残りの白菜、豚肉の順に重ねる。",
+      "酒、鶏ガラスープの素を回しかけ、ふんわりとラップをする。",
+      "電子レンジ(600W)で8分〜10分加熱する。豚肉に火が通っていればOK。",
+      "全体を軽く混ぜ合わせ、器に盛る。お好みで小ねぎを散らし、ポン酢をつけていただく。"
+    ]
+  },
+  {
+    id: 2,
+    title: "基本のトマトパスタ",
+    image: "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?auto=format&fit=crop&q=80&w=800",
+    tags: ["パスタ", "トマト", "ランチ", "定番"],
+    servings: "1人分",
+    metadata: {
+      estimatedTime: "20分",
+      calories: "600kcal"
+    },
+    ingredients: [
+       { name: "パスタ", quantity: "100g" },
+       { name: "ホールトマト缶", quantity: "1/2缶" }
+    ], 
+    steps: ["お湯を沸かす", "パスタを茹でる"]
+  },
+];
+
+// --- コンポーネント ---
+
+const Tag = ({ text, active }) => (
+  <span className={`px-2 py-1 text-xs rounded-full mr-1 mb-1 ${
+    active ? 'bg-orange-100 text-orange-700 font-medium' : 'bg-gray-100 text-gray-600'
+  }`}>
+    #{text}
+  </span>
+);
+
+const MetaBadge = ({ icon: Icon, text, colorClass }) => (
+  <div className={`flex items-center text-xs mr-3 ${colorClass}`}>
+    <Icon size={14} className="mr-1" />
+    <span>{text}</span>
+  </div>
+);
+
+// 登録メニューモーダル
+const AddMenuModal = ({ onClose }) => {
+  const menuItems = [
+    { icon: ImageIcon, label: "写真から選択", desc: "スクショやライブラリから" },
+    { icon: Camera, label: "カメラで撮影", desc: "本やメモをスキャン" },
+    { icon: LinkIcon, label: "Webリンク", desc: "URLから自動読み込み" },
+    { icon: FileText, label: "直接入力", desc: "空のレシピを作成" },
+  ];
+
+  return (
+    <div className="absolute inset-0 z-50 flex items-end justify-center sm:items-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div 
+        className="bg-white w-full sm:w-80 sm:rounded-2xl rounded-t-2xl p-4 shadow-2xl animate-in slide-in-from-bottom duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-4 px-2">
+          <h3 className="font-bold text-gray-800">レシピを追加</h3>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100 text-gray-500">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="space-y-3">
+          {menuItems.map((item, idx) => (
+            <button 
+              key={idx}
+              className="w-full flex items-center p-3 rounded-xl hover:bg-orange-50 active:scale-[0.98] transition-all group border border-transparent hover:border-orange-100"
+              onClick={() => {
+                alert(`「${item.label}」が選択されました (モック)`);
+                onClose();
+              }}
+            >
+              <div className="bg-orange-100 text-orange-600 p-3 rounded-full mr-4 group-hover:bg-orange-200 transition-colors">
+                <item.icon size={20} />
+              </div>
+              <div className="text-left">
+                <div className="font-bold text-gray-800 text-sm">{item.label}</div>
+                <div className="text-xs text-gray-500">{item.desc}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+      {/* Click outside to close */}
+      <div className="absolute inset-0 -z-10" onClick={onClose}></div>
+    </div>
+  );
+};
+
+// 編集画面コンポーネント
+const RecipeEditScreen = ({ originalRecipe, onSave, onCancel }) => {
+  const [formData, setFormData] = useState(JSON.parse(JSON.stringify(originalRecipe)));
+
+  // 画像変更シミュレーション
+  const handleChangeImage = () => {
+    // 実際には画像ピッカーが開く
+    const newImage = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800"; // ダミーの変更画像
+    setFormData(prev => ({ ...prev, image: newImage }));
+  };
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleMetaChange = (field, value) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      metadata: { ...prev.metadata, [field]: value } 
+    }));
+  };
+
+  const handleIngredientChange = (idx, field, value) => {
+    const newIngredients = [...formData.ingredients];
+    newIngredients[idx][field] = value;
+    setFormData(prev => ({ ...prev, ingredients: newIngredients }));
+  };
+
+  const addIngredient = () => {
+    setFormData(prev => ({
+      ...prev,
+      ingredients: [...prev.ingredients, { name: "", quantity: "" }]
+    }));
+  };
+
+  const removeIngredient = (idx) => {
+    setFormData(prev => ({
+      ...prev,
+      ingredients: prev.ingredients.filter((_, i) => i !== idx)
+    }));
+  };
+
+  const handleStepChange = (idx, value) => {
+    const newSteps = [...formData.steps];
+    newSteps[idx] = value;
+    setFormData(prev => ({ ...prev, steps: newSteps }));
+  };
+
+  const addStep = () => {
+    setFormData(prev => ({ ...prev, steps: [...prev.steps, ""] }));
+  };
+
+  const removeStep = (idx) => {
+    setFormData(prev => ({
+      ...prev,
+      steps: prev.steps.filter((_, i) => i !== idx)
+    }));
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50 animate-in slide-in-from-bottom duration-300">
+      {/* Edit Header */}
+      <header className="bg-white px-4 py-3 shadow-sm sticky top-0 z-20 flex items-center justify-between">
+        <button onClick={onCancel} className="text-gray-500 hover:text-gray-800 p-2">
+          キャンセル
+        </button>
+        <h2 className="font-bold text-gray-800">レシピ編集</h2>
+        <button 
+          onClick={() => onSave(formData)} 
+          className="text-orange-600 font-bold hover:text-orange-700 p-2 flex items-center"
+        >
+          <Save size={18} className="mr-1" />
+          保存
+        </button>
+      </header>
+
+      <div className="flex-1 overflow-y-auto pb-20">
+        
+        {/* Image Edit Section */}
+        <div className="relative w-full h-48 bg-gray-200 group">
+          <img src={formData.image} alt="Recipe" className="w-full h-full object-cover opacity-80" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <button 
+              onClick={handleChangeImage}
+              className="bg-black/50 hover:bg-black/70 text-white px-4 py-2 rounded-full flex items-center backdrop-blur-sm transition-all"
+            >
+              <Camera size={20} className="mr-2" />
+              写真を変更
+            </button>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-6">
+          {/* Basic Info */}
+          <div className="bg-white p-4 rounded-xl shadow-sm space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">レシピタイトル</label>
+              <input 
+                type="text" 
+                value={formData.title} 
+                onChange={(e) => handleChange('title', e.target.value)}
+                className="w-full text-lg font-bold border-b border-gray-200 focus:border-orange-500 focus:outline-none py-1"
+              />
+            </div>
+            
+            {/* Meta Data Row: Servings, Time, Calories */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1 flex items-center">
+                  <Users size={12} className="mr-1"/> 分量
+                </label>
+                <input 
+                  type="text" 
+                  value={formData.servings} 
+                  onChange={(e) => handleChange('servings', e.target.value)}
+                  className="w-full text-sm border-b border-gray-200 focus:border-orange-500 focus:outline-none py-1"
+                />
+              </div>
+               <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1 flex items-center">
+                   <Clock size={12} className="mr-1"/> 時間
+                </label>
+                <input 
+                  type="text" 
+                  value={formData.metadata.estimatedTime} 
+                  onChange={(e) => handleMetaChange('estimatedTime', e.target.value)}
+                  className="w-full text-sm border-b border-gray-200 focus:border-orange-500 focus:outline-none py-1"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1 flex items-center">
+                   <Flame size={12} className="mr-1"/> カロリー
+                </label>
+                <input 
+                  type="text" 
+                  value={formData.metadata.calories} 
+                  onChange={(e) => handleMetaChange('calories', e.target.value)}
+                  className="w-full text-sm border-b border-gray-200 focus:border-orange-500 focus:outline-none py-1"
+                />
+              </div>
+            </div>
+            
+             <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">タグ (カンマ区切り)</label>
+                <input 
+                  type="text" 
+                  value={formData.tags.join(", ")} 
+                  onChange={(e) => handleChange('tags', e.target.value.split(",").map(t => t.trim()))}
+                  className="w-full text-sm border-b border-gray-200 focus:border-orange-500 focus:outline-none py-1 text-blue-600"
+                />
+              </div>
+          </div>
+
+          {/* Ingredients Edit */}
+          <div className="bg-white p-4 rounded-xl shadow-sm">
+            <div className="flex justify-between items-center mb-3">
+               <h3 className="font-bold text-gray-700">材料</h3>
+               <button onClick={addIngredient} className="text-orange-600 text-sm font-bold flex items-center hover:bg-orange-50 px-2 py-1 rounded">
+                 <Plus size={16} className="mr-1"/> 追加
+               </button>
+            </div>
+            <div className="space-y-2">
+              {formData.ingredients.map((ing, idx) => (
+                <div key={idx} className="flex items-center space-x-2">
+                  <div className="flex-1 grid grid-cols-5 gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="材料名"
+                      value={ing.name}
+                      onChange={(e) => handleIngredientChange(idx, 'name', e.target.value)}
+                      className="col-span-3 bg-gray-50 rounded px-2 py-2 text-sm border-transparent focus:bg-white focus:ring-1 focus:ring-orange-300 outline-none transition-all"
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="分量"
+                      value={ing.quantity}
+                      onChange={(e) => handleIngredientChange(idx, 'quantity', e.target.value)}
+                      className="col-span-2 bg-gray-50 rounded px-2 py-2 text-sm border-transparent focus:bg-white focus:ring-1 focus:ring-orange-300 outline-none transition-all"
+                    />
+                  </div>
+                  <button onClick={() => removeIngredient(idx)} className="text-gray-300 hover:text-red-500 p-1">
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Steps Edit */}
+          <div className="bg-white p-4 rounded-xl shadow-sm">
+            <div className="flex justify-between items-center mb-3">
+               <h3 className="font-bold text-gray-700">作り方</h3>
+               <button onClick={addStep} className="text-orange-600 text-sm font-bold flex items-center hover:bg-orange-50 px-2 py-1 rounded">
+                 <Plus size={16} className="mr-1"/> 追加
+               </button>
+            </div>
+            <div className="space-y-4">
+              {formData.steps.map((step, idx) => (
+                <div key={idx} className="flex items-start space-x-2 group">
+                  <span className="text-xs font-bold bg-orange-100 text-orange-600 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    {idx + 1}
+                  </span>
+                  <textarea 
+                    value={step}
+                    onChange={(e) => handleStepChange(idx, e.target.value)}
+                    rows={2}
+                    className="flex-1 bg-gray-50 rounded px-3 py-2 text-sm border-transparent focus:bg-white focus:ring-1 focus:ring-orange-300 outline-none transition-all resize-none"
+                  />
+                  <button onClick={() => removeStep(idx)} className="text-gray-300 hover:text-red-500 p-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// リスト画面
+const RecipeListScreen = ({ recipes, onSelect }) => {
+  const [showAddMenu, setShowAddMenu] = useState(false);
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50 relative">
+      <header className="bg-white px-4 py-3 shadow-sm sticky top-0 z-10">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-xl font-bold text-gray-800 flex items-center">
+            <ChefHat className="mr-2 text-orange-500" />
+            Smart Recipe Note
+          </h1>
+        </div>
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+          <input 
+            type="text" 
+            placeholder="料理名、食材で検索..." 
+            className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+          />
+        </div>
+        <div className="flex overflow-x-auto pb-1 no-scrollbar space-x-2">
+          {["すべて", "時短 (15分以内)", "主菜", "お弁当", "鶏肉"].map((filter, i) => (
+            <button 
+              key={i}
+              className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium border ${
+                i === 0 ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-600 border-gray-200'
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {recipes.map((recipe) => (
+          <div 
+            key={recipe.id} 
+            onClick={() => onSelect(recipe)}
+            className="bg-white rounded-xl shadow-sm overflow-hidden active:scale-[0.98] transition-transform cursor-pointer"
+          >
+            <div className="flex h-32">
+              <div className="w-1/3 relative">
+                <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
+              </div>
+              <div className="w-2/3 p-3 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-gray-800 leading-tight mb-2">{recipe.title}</h3>
+                  <div className="flex flex-wrap mb-1">
+                    {recipe.tags.slice(0, 3).map(tag => <Tag key={tag} text={tag} />)}
+                  </div>
+                </div>
+                
+                <div className="flex items-center border-t pt-2 mt-1 gap-4">
+                  <MetaBadge icon={Clock} text={recipe.metadata.estimatedTime} colorClass="text-blue-600" />
+                  <MetaBadge icon={Flame} text={recipe.metadata.calories} colorClass="text-orange-600" />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Add Button (FAB) */}
+      <button 
+        onClick={() => setShowAddMenu(true)}
+        className="absolute bottom-6 right-6 bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-full shadow-lg transition-transform active:scale-90 z-20"
+      >
+        <Plus size={24} className="font-bold" />
+      </button>
+
+      {/* Add Menu Modal Overlay */}
+      {showAddMenu && <AddMenuModal onClose={() => setShowAddMenu(false)} />}
+    </div>
+  );
+};
+
+// 詳細画面 (閲覧モード)
+const RecipeDetailScreen = ({ recipe, onBack, onEdit }) => {
+  const [cookingMode, setCookingMode] = useState(false);
+
+  return (
+    <div className={`flex flex-col h-screen ${cookingMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} transition-colors duration-300`}>
+      <header className={`flex-shrink-0 z-20 ${cookingMode ? 'bg-gray-800 border-b border-gray-700' : 'bg-white border-b border-gray-100 shadow-sm'}`}>
+        {/* Top Bar */}
+        <div className="px-4 py-3 flex items-center justify-between">
+          <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-gray-100/10">
+            <ArrowLeft size={24} />
+          </button>
+          <h2 className="font-bold truncate px-2 text-sm md:text-base flex-1 text-center">
+            {recipe.title}
+          </h2>
+          <div className="flex items-center space-x-1">
+            {!cookingMode && (
+               <button 
+                onClick={onEdit}
+                className="p-2 rounded-full text-orange-600 hover:bg-orange-50 mr-2"
+                title="編集"
+              >
+                <Pencil size={20} />
+              </button>
+            )}
+            <button 
+              onClick={() => setCookingMode(!cookingMode)}
+              className={`flex items-center px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                cookingMode 
+                  ? 'bg-green-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.5)]' 
+                  : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {cookingMode ? <Maximize2 size={14} className="mr-1" /> : <Moon size={14} className="mr-1" />}
+              {cookingMode ? 'COOKING' : 'OFF'}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content (Split View Area) */}
+      <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
+        
+        {/* Pane 1: Ingredients */}
+        <div className={`
+          flex-shrink-0 
+          h-[40%] md:h-full md:w-[35%] 
+          overflow-y-auto 
+          border-b md:border-b-0 md:border-r 
+          ${cookingMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-orange-50/50'}
+        `}>
+          <div className="p-5">
+            <h3 className={`font-bold mb-4 text-lg flex items-center ${cookingMode ? 'text-orange-300' : 'text-orange-800'}`}>
+              材料 <span className="text-sm font-normal ml-2 opacity-70">({recipe.servings})</span>
+            </h3>
+            <ul className="space-y-3">
+              {recipe.ingredients.map((ing, idx) => (
+                <li key={idx} className="flex justify-between items-end border-b border-dashed border-gray-500/20 pb-1">
+                  <span className="font-medium">{ing.name}</span>
+                  <span className="font-bold opacity-80">{ing.quantity}</span>
+                </li>
+              ))}
+            </ul>
+             
+            {/* Metadata in Ingredients Pane */}
+            <div className="mt-8 flex flex-wrap gap-2">
+               <span className={`text-xs px-2 py-1 rounded border ${cookingMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'}`}>
+                 🕒 {recipe.metadata.estimatedTime}
+               </span>
+               <span className={`text-xs px-2 py-1 rounded border ${cookingMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'}`}>
+                 🔥 {recipe.metadata.calories}
+               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Pane 2: Steps */}
+        <div className={`
+          flex-1 
+          h-[60%] md:h-full md:w-[65%] 
+          overflow-y-auto 
+          scroll-smooth
+          ${cookingMode ? 'bg-gray-800' : 'bg-white'}
+        `}>
+          <div className="p-5 pb-20">
+            <h3 className={`font-bold mb-4 text-lg sticky top-0 py-2 z-10 backdrop-blur-sm ${cookingMode ? 'text-orange-300 bg-gray-800/90' : 'text-orange-800 bg-white/90'}`}>
+              作り方
+            </h3>
+            <div className="space-y-6">
+              {recipe.steps.map((step, idx) => (
+                <div key={idx} className="flex group">
+                  <div className={`
+                    flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-4 mt-0.5
+                    ${cookingMode ? 'bg-orange-600 text-white' : 'bg-orange-100 text-orange-600'}
+                  `}>
+                    {idx + 1}
+                  </div>
+                  <p className={`text-base leading-relaxed pt-0.5 ${cookingMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                    {step}
+                  </p>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-12 text-center opacity-50 text-sm">
+              <div className="w-16 h-1 bg-current rounded-full mx-auto mb-2"></div>
+              <span>美味しくできますように！</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default function App() {
+  const [recipes, setRecipes] = useState(SAMPLE_RECIPES);
+  const [currentRecipe, setCurrentRecipe] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleSaveRecipe = (updatedRecipe) => {
+    setRecipes(prev => prev.map(r => r.id === updatedRecipe.id ? updatedRecipe : r));
+    setCurrentRecipe(updatedRecipe);
+    setIsEditing(false);
+  };
+
+  if (currentRecipe) {
+    if (isEditing) {
+      return (
+        <div className="w-full h-full max-w-4xl mx-auto border-x border-gray-200 shadow-2xl overflow-hidden font-sans text-gray-900 bg-white">
+          <RecipeEditScreen 
+            originalRecipe={currentRecipe} 
+            onSave={handleSaveRecipe}
+            onCancel={() => setIsEditing(false)}
+          />
+        </div>
+      );
+    }
+    return (
+      <div className="w-full h-full max-w-4xl mx-auto border-x border-gray-200 shadow-2xl overflow-hidden font-sans text-gray-900 bg-white">
+        <RecipeDetailScreen 
+          recipe={currentRecipe} 
+          onBack={() => setCurrentRecipe(null)}
+          onEdit={() => setIsEditing(true)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full max-w-4xl mx-auto border-x border-gray-200 shadow-2xl overflow-hidden font-sans text-gray-900 bg-white">
+      <RecipeListScreen recipes={recipes} onSelect={setCurrentRecipe} />
+    </div>
+  );
+}
