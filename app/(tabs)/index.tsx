@@ -14,17 +14,17 @@ import {
 import { AddMenuModal } from '@/components/modals/AddMenuModal';
 import { RecipeCard } from '@/components/recipe/RecipeCard';
 import { Colors } from '@/constants/Colors';
-import { SAMPLE_RECIPES } from '@/data/sampleRecipes';
+import { useRecipes } from '@/contexts/RecipeContext';
 import { Recipe } from '@/types/recipe';
 
 const FILTERS = ['すべて', '時短 (15分以内)', '主菜', 'お弁当', '鶏肉'];
 
 export default function RecipeListScreen() {
   const router = useRouter();
+  const { recipes } = useRecipes();
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState(0);
-  const [recipes] = useState<Recipe[]>(SAMPLE_RECIPES);
 
   const handleRecipePress = (recipe: Recipe) => {
     router.push({
@@ -35,8 +35,17 @@ export default function RecipeListScreen() {
 
   const handleAddOption = (option: 'photo' | 'camera' | 'link' | 'manual') => {
     setShowAddMenu(false);
-    // TODO: 各登録フローへ遷移
-    console.log('Selected option:', option);
+    switch (option) {
+      case 'manual':
+        router.push('/recipe/new');
+        break;
+      case 'photo':
+      case 'camera':
+      case 'link':
+        // TODO: Phase 2-3 で実装予定
+        console.log('Selected option:', option);
+        break;
+    }
   };
 
   const filteredRecipes = recipes.filter((recipe) => {

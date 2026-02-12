@@ -14,17 +14,18 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/Colors';
-import { SAMPLE_RECIPES } from '@/data/sampleRecipes';
+import { useRecipes } from '@/contexts/RecipeContext';
 
 export default function RecipeDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
+    const { getRecipeById } = useRecipes();
     const [cookingMode, setCookingMode] = useState(false);
 
     // Cooking Mode時は画面を常時オンに
     useKeepAwake();
 
-    const recipe = SAMPLE_RECIPES.find((r) => r.id === id);
+    const recipe = getRecipeById(id);
 
     if (!recipe) {
         return (

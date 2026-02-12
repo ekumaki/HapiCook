@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { RecipeProvider } from '@/contexts/RecipeContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -76,24 +77,33 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? HapiCookDarkTheme : HapiCookLightTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="recipe/[id]"
-          options={{
-            headerBackTitle: '戻る',
-            headerTitleStyle: { fontWeight: 'bold' },
-          }}
-        />
-        <Stack.Screen
-          name="recipe/edit/[id]"
-          options={{
-            presentation: 'modal',
-            headerShown: true,
-          }}
-        />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
+      <RecipeProvider>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="recipe/[id]"
+            options={{
+              headerBackTitle: '戻る',
+              headerTitleStyle: { fontWeight: 'bold' },
+            }}
+          />
+          <Stack.Screen
+            name="recipe/edit/[id]"
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+            }}
+          />
+          <Stack.Screen
+            name="recipe/new"
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+            }}
+          />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
+      </RecipeProvider>
     </ThemeProvider>
   );
 }

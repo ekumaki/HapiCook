@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -18,59 +18,47 @@ import { Colors } from '@/constants/Colors';
 import { useRecipes } from '@/contexts/RecipeContext';
 import { Ingredient, Recipe } from '@/types/recipe';
 
-export default function RecipeEditScreen() {
-    const { id } = useLocalSearchParams<{ id: string }>();
+// 空のレシピテンプレート
+function createEmptyRecipe(): Omit<Recipe, 'id' | 'createdAt'> {
+    return {
+        title: '',
+        image: '',
+        tags: [],
+        servings: '',
+        metadata: { estimatedTime: '', calories: '' },
+        ingredients: [{ name: '', quantity: '' }],
+        steps: [''],
+    };
+}
+
+export default function NewRecipeScreen() {
     const router = useRouter();
-    const { getRecipeById, updateRecipe, deleteRecipe } = useRecipes();
-
-    const originalRecipe = getRecipeById(id);
-
-    const [formData, setFormData] = useState<Recipe | null>(
-        originalRecipe ? JSON.parse(JSON.stringify(originalRecipe)) : null
-    );
-
-    if (!formData) {
-        return (
-            <View style={styles.container}>
-                <Text style={styles.errorText}>レシピが見つかりません</Text>
-            </View>
-        );
-    }
+    const { addRecipe } = useRecipes();
+    const [formData, setFormData] = useState(createEmptyRecipe());
 
     const handleSave = () => {
-        if (!formData) return;
-        updateRecipe(formData);
+        console.log('handleSave called with:', formData);
+        if (!formData.title.trim()) {
+            Alert.alert('入力エラー', 'レシピタイトルを入力してください');
+            return;
+        }
+        // 空の材料・手順を除外してから保存
+        const cleaned = {
+            ...formData,
+            ingredients: formData.ingredients.filter((ing) => ing.name.trim()),
+            steps: formData.steps.filter((s) => s.trim()),
+        };
+        console.log('Adding recipe:', cleaned);
+        const added = addRecipe(cleaned);
+        console.log('Added recipe:', added);
 
         if (Platform.OS === 'web') {
-            alert('レシピが更新されました');
+            alert('レシピが追加されました');
             router.back();
         } else {
-            Alert.alert('保存完了', 'レシピが更新されました', [
+            Alert.alert('保存完了', 'レシピが追加されました', [
                 { text: 'OK', onPress: () => router.back() },
             ]);
-        }
-    };
-
-    const handleDelete = () => {
-        const confirmDelete = () => {
-            deleteRecipe(id);
-            // 詳細画面からも戻る必要があるため、一覧まで戻る
-            router.replace('/(tabs)');
-        };
-
-        if (Platform.OS === 'web') {
-            if (confirm('本当にこのレシピを削除しますか？\nこの操作は取り消せません。')) {
-                confirmDelete();
-            }
-        } else {
-            Alert.alert(
-                'レシピの削除',
-                '本当にこのレシピを削除しますか？\nこの操作は取り消せません。',
-                [
-                    { text: 'キャンセル', style: 'cancel' },
-                    { text: '削除', style: 'destructive', onPress: confirmDelete },
-                ]
-            );
         }
     };
 
@@ -87,7 +75,7 @@ export default function RecipeEditScreen() {
         }
     };
 
-    const updateField = <K extends keyof Recipe>(field: K, value: Recipe[K]) => {
+    const updateField = <K extends keyof typeof formData>(field: K, value: (typeof formData)[K]) => {
         setFormData({ ...formData, [field]: value });
     };
 
@@ -139,7 +127,7 @@ export default function RecipeEditScreen() {
         <>
             <Stack.Screen
                 options={{
-                    title: 'レシピ編集',
+                    title: '新規レシピ',
                     headerLeft: () => (
                         <TouchableOpacity onPress={() => router.back()}>
                             <Text style={styles.headerCancel}>キャンセル</Text>
@@ -157,11 +145,20 @@ export default function RecipeEditScreen() {
             <ScrollView style={styles.container} contentContainerStyle={styles.content}>
                 {/* Image Section */}
                 <TouchableOpacity style={styles.imageSection} onPress={handleChangeImage}>
-                    <Image source={{ uri: formData.image }} style={styles.image} />
-                    <View style={styles.imageOverlay}>
-                        <Ionicons name="camera" size={24} color="#fff" />
-                        <Text style={styles.imageOverlayText}>写真を変更</Text>
-                    </View>
+                    {formData.image ? (
+                        <>
+                            <Image source={{ uri: formData.image }} style={styles.image} />
+                            <View style={styles.imageOverlay}>
+                                <Ionicons name="camera" size={24} color="#fff" />
+                                <Text style={styles.imageOverlayText}>写真を変更</Text>
+                            </View>
+                        </>
+                    ) : (
+                        <View style={styles.imagePlaceholder}>
+                            <Ionicons name="camera-outline" size={40} color={Colors.textLight} />
+                            <Text style={styles.imagePlaceholderText}>写真を追加</Text>
+                        </View>
+                    )}
                 </TouchableOpacity>
 
                 {/* Basic Info */}
@@ -172,6 +169,7 @@ export default function RecipeEditScreen() {
                         value={formData.title}
                         onChangeText={(v) => updateField('title', v)}
                         placeholder="タイトルを入力"
+                        placeholderTextColor={Colors.textLight}
                     />
 
                     <View style={styles.row}>
@@ -184,6 +182,7 @@ export default function RecipeEditScreen() {
                                 value={formData.servings}
                                 onChangeText={(v) => updateField('servings', v)}
                                 placeholder="2人分"
+                                placeholderTextColor={Colors.textLight}
                             />
                         </View>
                         <View style={styles.rowItem}>
@@ -195,6 +194,7 @@ export default function RecipeEditScreen() {
                                 value={formData.metadata.estimatedTime}
                                 onChangeText={(v) => updateMetadata('estimatedTime', v)}
                                 placeholder="15分"
+                                placeholderTextColor={Colors.textLight}
                             />
                         </View>
                         <View style={styles.rowItem}>
@@ -206,6 +206,7 @@ export default function RecipeEditScreen() {
                                 value={formData.metadata.calories}
                                 onChangeText={(v) => updateMetadata('calories', v)}
                                 placeholder="350kcal"
+                                placeholderTextColor={Colors.textLight}
                             />
                         </View>
                     </View>
@@ -216,6 +217,7 @@ export default function RecipeEditScreen() {
                         value={formData.tags.join(', ')}
                         onChangeText={(v) => updateField('tags', v.split(',').map((t) => t.trim()))}
                         placeholder="豚肉, 時短, 和食"
+                        placeholderTextColor={Colors.textLight}
                     />
                 </View>
 
@@ -235,12 +237,14 @@ export default function RecipeEditScreen() {
                                 value={ing.name}
                                 onChangeText={(v) => updateIngredient(index, 'name', v)}
                                 placeholder="材料名"
+                                placeholderTextColor={Colors.textLight}
                             />
                             <TextInput
                                 style={[styles.ingredientInput, { flex: 1 }]}
                                 value={ing.quantity}
                                 onChangeText={(v) => updateIngredient(index, 'quantity', v)}
                                 placeholder="分量"
+                                placeholderTextColor={Colors.textLight}
                             />
                             <TouchableOpacity
                                 onPress={() => removeIngredient(index)}
@@ -271,6 +275,7 @@ export default function RecipeEditScreen() {
                                 value={step}
                                 onChangeText={(v) => updateStep(index, v)}
                                 placeholder="手順を入力"
+                                placeholderTextColor={Colors.textLight}
                                 multiline
                             />
                             <TouchableOpacity
@@ -282,16 +287,6 @@ export default function RecipeEditScreen() {
                         </View>
                     ))}
                 </View>
-
-                {/* Delete Button */}
-                <TouchableOpacity
-                    style={styles.deleteRecipeButton}
-                    onPress={handleDelete}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-                    <Text style={styles.deleteRecipeText}>このレシピを削除する</Text>
-                </TouchableOpacity>
             </ScrollView>
         </>
     );
@@ -348,6 +343,16 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 14,
         marginTop: 4,
+    },
+    imagePlaceholder: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    imagePlaceholderText: {
+        fontSize: 14,
+        color: Colors.textLight,
+        marginTop: 8,
     },
     section: {
         backgroundColor: Colors.surface,
@@ -454,30 +459,5 @@ const styles = StyleSheet.create({
     deleteButton: {
         padding: 8,
         marginTop: 4,
-    },
-    errorText: {
-        textAlign: 'center',
-        marginTop: 40,
-        fontSize: 16,
-        color: Colors.textSecondary,
-    },
-    deleteRecipeButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 32,
-        marginBottom: 24,
-        paddingVertical: 16,
-        marginHorizontal: 16,
-        borderRadius: 12,
-        backgroundColor: '#FFF2F2',
-        borderWidth: 1,
-        borderColor: '#FFD5D2',
-        gap: 8,
-    },
-    deleteRecipeText: {
-        color: '#FF3B30',
-        fontSize: 15,
-        fontWeight: '600',
     },
 });
