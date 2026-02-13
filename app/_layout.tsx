@@ -101,6 +101,27 @@ function RootLayoutNav() {
               headerShown: true,
             }}
           />
+          <Stack.Screen
+            name="recipe/add-link"
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+            }}
+          />
+          <Stack.Screen
+            name="recipe/add-text"
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+            }}
+          />
+          <Stack.Screen
+            name="recipe/preview"
+            options={{
+              presentation: 'card',
+              headerShown: true,
+            }}
+          />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         </Stack>
       </RecipeProvider>

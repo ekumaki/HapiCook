@@ -33,16 +33,21 @@ export default function RecipeListScreen() {
     });
   };
 
-  const handleAddOption = (option: 'photo' | 'camera' | 'link' | 'manual') => {
+  const handleAddOption = (option: 'photo' | 'camera' | 'link' | 'text' | 'manual') => {
     setShowAddMenu(false);
     switch (option) {
       case 'manual':
         router.push('/recipe/new');
         break;
+      case 'link':
+        router.push('/recipe/add-link');
+        break;
+      case 'text':
+        router.push('/recipe/add-text');
+        break;
       case 'photo':
       case 'camera':
-      case 'link':
-        // TODO: Phase 2-3 で実装予定
+        // TODO: Phase 3 で実装予定
         console.log('Selected option:', option);
         break;
     }

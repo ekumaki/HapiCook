@@ -6,10 +6,22 @@ import { Colors } from '../../constants/Colors';
 interface AddMenuModalProps {
     visible: boolean;
     onClose: () => void;
-    onSelectOption: (option: 'photo' | 'camera' | 'link' | 'manual') => void;
+    onSelectOption: (option: 'photo' | 'camera' | 'link' | 'text' | 'manual') => void;
 }
 
 const menuItems = [
+    {
+        id: 'text' as const,
+        icon: 'document-text-outline' as const,
+        label: 'テキスト貼り付け',
+        desc: 'レシピ記事をコピペして作成'
+    },
+    {
+        id: 'link' as const,
+        icon: 'link-outline' as const,
+        label: 'Webリンク',
+        desc: 'URLから作成（一部サイトのみ）'
+    },
     {
         id: 'photo' as const,
         icon: 'image-outline' as const,
@@ -21,12 +33,6 @@ const menuItems = [
         icon: 'camera-outline' as const,
         label: 'カメラで撮影',
         desc: '本やメモをスキャン'
-    },
-    {
-        id: 'link' as const,
-        icon: 'link-outline' as const,
-        label: 'Webリンク',
-        desc: 'URLから自動読み込み'
     },
     {
         id: 'manual' as const,
