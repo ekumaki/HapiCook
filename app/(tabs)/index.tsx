@@ -47,8 +47,10 @@ export default function RecipeListScreen() {
         break;
       case 'photo':
       case 'camera':
-        // TODO: Phase 3 で実装予定
-        console.log('Selected option:', option);
+        router.push({
+          pathname: '/recipe/add-photo',
+          params: { mode: option },
+        });
         break;
     }
   };
