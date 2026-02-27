@@ -10,6 +10,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
+    useWindowDimensions,
     View,
 } from 'react-native';
 
@@ -21,6 +22,8 @@ export default function RecipeDetailScreen() {
     const router = useRouter();
     const { getRecipeById } = useRecipes();
     const [cookingMode, setCookingMode] = useState(false);
+    const { width } = useWindowDimensions();
+    const isWide = width > 425;
 
     // Cooking Mode時は画面を常時オンに
     useKeepAwake();
@@ -38,6 +41,83 @@ export default function RecipeDetailScreen() {
     const bgColor = cookingMode ? Colors.dark.background : Colors.surface;
     const textColor = cookingMode ? Colors.dark.text : Colors.text;
     const secondaryColor = cookingMode ? Colors.dark.textSecondary : Colors.textSecondary;
+
+    // Shared: Section header with 材料 title, servings, time, calories
+    const renderSectionHeader = () => (
+        <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: Colors.primary }]}>
+                材料
+            </Text>
+            <View style={styles.headerMeta}>
+                <View style={[styles.metaBadge, cookingMode && styles.metaBadgeDark]}>
+                    <Text style={styles.metaEmoji}>🍽️</Text>
+                    <Text style={[styles.metaValue, { color: textColor }]}>
+                        {recipe.servings || '- 人前'}
+                    </Text>
+                </View>
+                <View style={[styles.metaBadge, cookingMode && styles.metaBadgeDark]}>
+                    <Text style={styles.metaEmoji}>🕒</Text>
+                    <Text style={[styles.metaValue, { color: textColor }]}>
+                        {recipe.metadata.estimatedTime?.trim() ? recipe.metadata.estimatedTime : '- 分'}
+                    </Text>
+                </View>
+                <View style={[styles.metaBadge, cookingMode && styles.metaBadgeDark]}>
+                    <Text style={styles.metaEmoji}>🔥</Text>
+                    <Text style={[styles.metaValue, { color: textColor }]}>
+                        {recipe.metadata.calories?.trim() ? recipe.metadata.calories : '- kcal'}
+                    </Text>
+                </View>
+            </View>
+        </View>
+    );
+
+    // Shared: Ingredients list
+    const renderIngredients = () => (
+        <View style={styles.ingredientsList}>
+            {recipe.ingredients.map((ing, index) => (
+                <View key={index} style={styles.ingredientItem}>
+                    <Text style={[styles.ingredientName, { color: textColor }]}>
+                        {ing.name}
+                    </Text>
+                    <View style={styles.ingredientDots} />
+                    <Text style={[styles.ingredientQuantity, { color: textColor }]}>
+                        {ing.quantity}
+                    </Text>
+                </View>
+            ))}
+        </View>
+    );
+
+    // Shared: Steps list
+    const renderSteps = () => (
+        <View style={styles.stepsList}>
+            {recipe.steps.map((step, index) => (
+                <View key={index} style={styles.stepItem}>
+                    <View
+                        style={[
+                            styles.stepNumber,
+                            cookingMode && styles.stepNumberDark,
+                        ]}
+                    >
+                        <Text style={styles.stepNumberText}>{index + 1}</Text>
+                    </View>
+                    <Text style={[styles.stepText, { color: textColor }]}>
+                        {step}
+                    </Text>
+                </View>
+            ))}
+        </View>
+    );
+
+    // Shared: Footer
+    const renderFooter = () => (
+        <View style={styles.footer}>
+            <View style={[styles.footerLine, { backgroundColor: secondaryColor }]} />
+            <Text style={[styles.footerText, { color: secondaryColor }]}>
+                美味しくできますように！
+            </Text>
+        </View>
+    );
 
     return (
         <>
@@ -84,85 +164,63 @@ export default function RecipeDetailScreen() {
             <StatusBar barStyle={cookingMode ? 'light-content' : 'dark-content'} />
 
             <View style={[styles.container, { backgroundColor: bgColor }]}>
-                <ScrollView style={styles.content}>
-                    {/* Hero Image */}
-                    {!cookingMode && (
-                        <Image source={{ uri: recipe.image }} style={styles.heroImage} />
-                    )}
+                {isWide ? (
+                    /* ===== Wide layout: side-by-side, independent scrolling ===== */
+                    <View style={styles.splitContainer}>
+                        {/* Left column: scrollable independently */}
+                        <ScrollView
+                            style={[styles.splitLeft, cookingMode && styles.sectionDark]}
+                            contentContainerStyle={styles.splitLeftContent}
+                        >
+                            {renderSectionHeader()}
+                            {renderIngredients()}
 
-                    {/* Ingredients Section */}
-                    <View style={[styles.section, cookingMode && styles.sectionDark]}>
-                        <View style={styles.sectionHeader}>
+                            {/* Photo below ingredients (wide layout) */}
+                            {!cookingMode && (
+                                <View style={styles.splitImageContainer}>
+                                    <Image source={{ uri: recipe.image }} style={styles.splitImage} />
+                                </View>
+                            )}
+                        </ScrollView>
+
+                        {/* Right column: scrollable independently */}
+                        <ScrollView
+                            style={[styles.splitRight, cookingMode && styles.sectionDark]}
+                            contentContainerStyle={styles.splitRightContent}
+                        >
                             <Text style={[styles.sectionTitle, { color: Colors.primary }]}>
-                                材料
+                                作り方
                             </Text>
-                            <Text style={[styles.servings, { color: secondaryColor }]}>
-                                {recipe.servings}
-                            </Text>
-                        </View>
-                        <View style={styles.ingredientsList}>
-                            {recipe.ingredients.map((ing, index) => (
-                                <View key={index} style={styles.ingredientItem}>
-                                    <Text style={[styles.ingredientName, { color: textColor }]}>
-                                        {ing.name}
-                                    </Text>
-                                    <View style={styles.ingredientDots} />
-                                    <Text style={[styles.ingredientQuantity, { color: textColor }]}>
-                                        {ing.quantity}
-                                    </Text>
-                                </View>
-                            ))}
-                        </View>
-
-                        {/* Metadata */}
-                        <View style={styles.metaRow}>
-                            <View style={[styles.metaBadge, cookingMode && styles.metaBadgeDark]}>
-                                <Text style={styles.metaEmoji}>🕒</Text>
-                                <Text style={[styles.metaValue, { color: textColor }]}>
-                                    {recipe.metadata.estimatedTime}
-                                </Text>
-                            </View>
-                            <View style={[styles.metaBadge, cookingMode && styles.metaBadgeDark]}>
-                                <Text style={styles.metaEmoji}>🔥</Text>
-                                <Text style={[styles.metaValue, { color: textColor }]}>
-                                    {recipe.metadata.calories}
-                                </Text>
-                            </View>
-                        </View>
+                            {renderSteps()}
+                            {renderFooter()}
+                        </ScrollView>
                     </View>
+                ) : (
+                    /* ===== Mobile layout: single scroll ===== */
+                    <ScrollView style={styles.content}>
+                        {/* Hero Image (mobile only - shown at top) */}
+                        {!cookingMode && (
+                            <View style={styles.heroImageContainer}>
+                                <Image source={{ uri: recipe.image }} style={styles.heroImage} />
+                            </View>
+                        )}
 
-                    {/* Steps Section */}
-                    <View style={[styles.section, styles.stepsSection, cookingMode && styles.sectionDark]}>
-                        <Text style={[styles.sectionTitle, { color: Colors.primary }]}>
-                            作り方
-                        </Text>
-                        <View style={styles.stepsList}>
-                            {recipe.steps.map((step, index) => (
-                                <View key={index} style={styles.stepItem}>
-                                    <View
-                                        style={[
-                                            styles.stepNumber,
-                                            cookingMode && styles.stepNumberDark,
-                                        ]}
-                                    >
-                                        <Text style={styles.stepNumberText}>{index + 1}</Text>
-                                    </View>
-                                    <Text style={[styles.stepText, { color: textColor }]}>
-                                        {step}
-                                    </Text>
-                                </View>
-                            ))}
+                        {/* Ingredients Section */}
+                        <View style={[styles.section, cookingMode && styles.sectionDark]}>
+                            {renderSectionHeader()}
+                            {renderIngredients()}
                         </View>
 
-                        {/* Footer */}
-                        <View style={styles.footer}>
-                            <View style={[styles.footerLine, { backgroundColor: secondaryColor }]} />
-                            <Text style={[styles.footerText, { color: secondaryColor }]}>
-                                美味しくできますように！
+                        {/* Steps Section */}
+                        <View style={[styles.section, styles.stepsSection, cookingMode && styles.sectionDark]}>
+                            <Text style={[styles.sectionTitle, { color: Colors.primary }]}>
+                                作り方
                             </Text>
+                            {renderSteps()}
+                            {renderFooter()}
                         </View>
-                    </View>
-                </ScrollView>
+                    </ScrollView>
+                )}
             </View>
         </>
     );
@@ -204,9 +262,24 @@ const styles = StyleSheet.create({
     cookingModeTextActive: {
         color: '#fff',
     },
+    heroImageContainer: {
+        width: '100%',
+        aspectRatio: 4 / 3,
+    },
     heroImage: {
         width: '100%',
-        height: 240,
+        height: '100%',
+    },
+    splitImageContainer: {
+        width: '100%',
+        aspectRatio: 4 / 3,
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginTop: 16,
+    },
+    splitImage: {
+        width: '100%',
+        height: '100%',
     },
     section: {
         padding: 20,
@@ -220,16 +293,20 @@ const styles = StyleSheet.create({
     },
     sectionHeader: {
         flexDirection: 'row',
-        alignItems: 'baseline',
+        alignItems: 'center',
+        flexWrap: 'wrap',
         marginBottom: 16,
+        gap: 8,
+    },
+    headerMeta: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginLeft: 'auto',
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-    },
-    servings: {
-        fontSize: 14,
-        marginLeft: 12,
     },
     ingredientsList: {
         gap: 12,
@@ -254,35 +331,52 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '600',
     },
-    metaRow: {
-        flexDirection: 'row',
-        marginTop: 20,
-        gap: 12,
-    },
     metaBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
         borderRadius: 6,
         borderWidth: 1,
         borderColor: Colors.border,
         backgroundColor: Colors.surface,
-        gap: 6,
+        gap: 4,
     },
     metaBadgeDark: {
         borderColor: Colors.dark.border,
         backgroundColor: Colors.dark.background,
     },
     metaEmoji: {
-        fontSize: 14,
+        fontSize: 12,
     },
     metaValue: {
-        fontSize: 12,
+        fontSize: 11,
     },
     stepsSection: {
         flex: 1,
         borderBottomWidth: 0,
+    },
+    splitContainer: {
+        flexDirection: 'row',
+        flex: 1,
+    },
+    splitLeft: {
+        flex: 2,
+        backgroundColor: Colors.surface,
+        borderRightWidth: 1,
+        borderRightColor: Colors.borderLight,
+    },
+    splitLeftContent: {
+        padding: 20,
+        paddingBottom: 40,
+    },
+    splitRight: {
+        flex: 3,
+        backgroundColor: Colors.surface,
+    },
+    splitRightContent: {
+        padding: 20,
+        paddingBottom: 40,
     },
     stepsList: {
         gap: 20,

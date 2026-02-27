@@ -9,6 +9,16 @@ interface RecipeCardProps {
     onPress: () => void;
 }
 
+function formatTime(value: string | undefined): string {
+    if (!value || value.trim() === '') return '- 分';
+    return value;
+}
+
+function formatCalories(value: string | undefined): string {
+    if (!value || value.trim() === '') return '- kcal';
+    return value;
+}
+
 export function RecipeCard({ recipe, onPress }: RecipeCardProps) {
     return (
         <TouchableOpacity
@@ -16,16 +26,21 @@ export function RecipeCard({ recipe, onPress }: RecipeCardProps) {
             onPress={onPress}
             activeOpacity={0.9}
         >
-            <Image source={{ uri: recipe.image }} style={styles.image} />
+            {/* Left: Photo, 1/3 of card width */}
+            <View style={styles.imageContainer}>
+                <Image source={{ uri: recipe.image }} style={styles.image} />
+            </View>
+            {/* Right: Recipe info */}
             <View style={styles.content}>
                 <View style={styles.topContent}>
                     <Text style={styles.title} numberOfLines={2}>
                         {recipe.title}
                     </Text>
+                    {/* Tags: overflow hidden, no wrap to cut off excess */}
                     <View style={styles.tags}>
                         {recipe.tags.slice(0, 3).map((tag, index) => (
                             <View key={index} style={styles.tag}>
-                                <Text style={styles.tagText}>#{tag}</Text>
+                                <Text style={styles.tagText} numberOfLines={1}>#{tag}</Text>
                             </View>
                         ))}
                     </View>
@@ -35,13 +50,13 @@ export function RecipeCard({ recipe, onPress }: RecipeCardProps) {
                     <View style={styles.metaItem}>
                         <Ionicons name="time-outline" size={14} color={Colors.info} />
                         <Text style={[styles.metaText, { color: Colors.info }]}>
-                            {recipe.metadata.estimatedTime}
+                            {formatTime(recipe.metadata.estimatedTime)}
                         </Text>
                     </View>
                     <View style={styles.metaItem}>
                         <Ionicons name="flame-outline" size={14} color={Colors.primary} />
                         <Text style={[styles.metaText, { color: Colors.primary }]}>
-                            {recipe.metadata.calories}
+                            {formatCalories(recipe.metadata.calories)}
                         </Text>
                     </View>
                 </View>
@@ -50,52 +65,60 @@ export function RecipeCard({ recipe, onPress }: RecipeCardProps) {
     );
 }
 
+const CARD_HEIGHT = 128;
+
 const styles = StyleSheet.create({
     card: {
         backgroundColor: Colors.surface,
         borderRadius: 12,
         overflow: 'hidden',
         flexDirection: 'row',
-        height: 128,
+        height: CARD_HEIGHT,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 8,
         elevation: 2,
-        marginBottom: 12,
+    },
+    imageContainer: {
+        width: '33%',
+        height: '100%',
     },
     image: {
-        width: '33%',
+        width: '100%',
         height: '100%',
     },
     content: {
         flex: 1,
-        padding: 12,
+        padding: 10,
         justifyContent: 'space-between',
     },
     topContent: {
         flex: 1,
+        overflow: 'hidden',
     },
     title: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         color: Colors.text,
-        marginBottom: 8,
-        lineHeight: 22,
+        marginBottom: 4,
+        lineHeight: 19,
     },
     tags: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
+        flexWrap: 'nowrap',
         gap: 4,
+        overflow: 'hidden',
     },
     tag: {
         backgroundColor: Colors.borderLight,
-        paddingHorizontal: 8,
+        paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 12,
+        flexShrink: 0,
     },
     tagText: {
-        fontSize: 11,
+        fontSize: 10,
         color: Colors.textSecondary,
     },
     metaRow: {
@@ -103,16 +126,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderTopWidth: 1,
         borderTopColor: Colors.borderLight,
-        paddingTop: 8,
-        gap: 16,
+        paddingTop: 6,
+        marginTop: 4,
+        gap: 12,
     },
     metaItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        gap: 3,
     },
     metaText: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '500',
     },
 });

@@ -8,6 +8,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View
 } from 'react-native';
 
@@ -17,7 +18,16 @@ import { Colors } from '@/constants/Colors';
 import { useRecipes } from '@/contexts/RecipeContext';
 import { Recipe } from '@/types/recipe';
 
-const FILTERS = ['すべて', '時短 (15分以内)', '主菜', 'お弁当', '鶏肉'];
+const FILTERS = [
+  'すべて',
+  '時短（15分以内）',
+  '主菜',
+  '副菜',
+  'ごはん・麺・パン',
+  'デザート',
+  '作り置き',
+  'お弁当',
+];
 
 export default function RecipeListScreen() {
   const router = useRouter();
@@ -25,6 +35,8 @@ export default function RecipeListScreen() {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState(0);
+  const { width } = useWindowDimensions();
+  const isWide = width > 425;
 
   const handleRecipePress = (recipe: Recipe) => {
     router.push({
@@ -56,14 +68,24 @@ export default function RecipeListScreen() {
   };
 
   const filteredRecipes = recipes.filter((recipe) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      recipe.title.toLowerCase().includes(query) ||
-      recipe.tags.some((tag) => tag.toLowerCase().includes(query)) ||
-      recipe.ingredients.some((ing) => ing.name.toLowerCase().includes(query))
-    );
+    // テキスト検索
+    const matchesSearch = !searchQuery || (() => {
+      const query = searchQuery.toLowerCase();
+      return (
+        recipe.title.toLowerCase().includes(query) ||
+        recipe.tags.some((tag) => tag.toLowerCase().includes(query)) ||
+        recipe.ingredients.some((ing) => ing.name.toLowerCase().includes(query))
+      );
+    })();
+
+    // タグフィルタ
+    const activeTag = FILTERS[activeFilter];
+    const matchesTag = activeTag === 'すべて' || recipe.tags.some((tag) => tag === activeTag);
+
+    return matchesSearch && matchesTag;
   });
+
+  const numColumns = isWide ? 2 : 1;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -117,11 +139,16 @@ export default function RecipeListScreen() {
 
       {/* Recipe List */}
       <FlatList
+        key={`recipe-list-${numColumns}`}
         data={filteredRecipes}
         keyExtractor={(item) => item.id}
+        numColumns={numColumns}
         contentContainerStyle={styles.listContent}
+        columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
         renderItem={({ item }) => (
-          <RecipeCard recipe={item} onPress={() => handleRecipePress(item)} />
+          <View style={numColumns > 1 ? styles.gridItem : styles.listItem}>
+            <RecipeCard recipe={item} onPress={() => handleRecipePress(item)} />
+          </View>
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -207,6 +234,17 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 100,
+  },
+  columnWrapper: {
+    gap: 12,
+  },
+  gridItem: {
+    flex: 1,
+    maxWidth: '50%',
+    marginBottom: 12,
+  },
+  listItem: {
+    marginBottom: 12,
   },
   emptyContainer: {
     alignItems: 'center',
