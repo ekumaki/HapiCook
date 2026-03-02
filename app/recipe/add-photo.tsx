@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -138,9 +138,8 @@ export default function AddPhotoScreen() {
         }
 
         // ネイティブ環境の場合（expo-file-system使用）
-        const base64 = await FileSystem.readAsStringAsync(uri, {
-            encoding: 'base64',
-        });
+        const file = new File(uri);
+        const base64 = await file.base64();
 
         // MIME typeを推定
         const extension = uri.split('.').pop()?.toLowerCase();

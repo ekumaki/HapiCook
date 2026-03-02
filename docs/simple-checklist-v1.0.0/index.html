@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シンプルチェックリスト</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .input-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            text-align: right;
+        }
+
+        .add-button {
+            display: block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        .add-button:hover {
+            background-color: #45a049;
+        }
+
+        .list-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .trash-icon {
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+            position: relative;
+        }
+
+        .trash-icon:hover {
+            opacity: 1;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: 120%;
+            right: 0;
+            background-color: #333;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .trash-icon:hover .tooltip {
+            opacity: 1;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 10px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        li {
+            padding: 12px 8px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: move;
+            transition: background-color 0.3s;
+        }
+        
+        li.dragging {
+            opacity: 0.5;
+            background-color: #f0f0f0;
+        }
+        
+        li.drag-over {
+            background-color: #e8f5e9;
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .todo-text {
+            flex: 1;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .completed .todo-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .empty-state {
+            color: #999;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="pageTitle">シンプルチェックリスト</h1>
+
+    <div class="input-section">
+        <div class="input-container">
+            <textarea 
+                id="todoInput" 
+                placeholder="メモを入力してください..."
+                title="Ctrl+Enterで追加／Enterで改行"
+            ></textarea>
+            <div class="hint">Ctrl+Enterで追加 / Enterで改行</div>
+            <button class="add-button" onclick="addTodo()">追加</button>
+        </div>
+    </div>
+
+    <div class="list-section">
+        <h2>未完了</h2>
+        <ul id="pendingList">
+            <li class="empty-state">メモがありません</li>
+        </ul>
+    </div>
+
+    <div class="list-section">
+        <div class="section-header">
+            <h2>完了済み</h2>
+            <div class="trash-icon" onclick="deleteAllCompleted()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+                <span class="tooltip">完了済み一括削除</span>
+            </div>
+        </div>
+        <ul id="completedList">
+            <li class="empty-state">完了したメモがありません</li>
+        </ul>
+    </div>
+
+    <script>
+        let todos = [];
+        let completedTodos = [];
+        let isComposing = false;
+
+        const todoInput = document.getElementById('todoInput');
+        const pendingList = document.getElementById('pendingList');
+        const completedList = document.getElementById('completedList');
+        const pageTitle = document.getElementById('pageTitle');
+        
+        // Get unique storage key based on filename
+        function getStorageKey() {
+            const path = window.location.pathname;
+            const filename = path.split('/').pop() || 'index.html';
+            return filename.replace('.html', '');
+        }
+        
+        const storageKey = getStorageKey();
+        
+        // Set page title based on filename
+        function setPageTitle() {
+            const filename = storageKey;
+            if (filename.includes('チェックリスト_')) {
+                const dateStr = filename.replace('チェックリスト_', '');
+                const year = dateStr.substring(0, 4);
+                const month = dateStr.substring(4, 6);
+                const day = dateStr.substring(6, 8);
+                const hour = dateStr.substring(9, 11);
+                const minute = dateStr.substring(11, 13);
+                const second = dateStr.substring(13, 15);
+                pageTitle.textContent = `チェックリスト ${year}/${month}/${day} ${hour}:${minute}:${second}`;
+            }
+        }
+        
+        // Load data from localStorage
+        function loadData() {
+            const savedTodos = localStorage.getItem(`todos_${storageKey}`);
+            const savedCompletedTodos = localStorage.getItem(`completedTodos_${storageKey}`);
+            
+            if (savedTodos) {
+                todos = JSON.parse(savedTodos);
+            }
+            
+            if (savedCompletedTodos) {
+                completedTodos = JSON.parse(savedCompletedTodos);
+            }
+        }
+        
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem(`todos_${storageKey}`, JSON.stringify(todos));
+            localStorage.setItem(`completedTodos_${storageKey}`, JSON.stringify(completedTodos));
+        }
+
+        // IME composition events
+        todoInput.addEventListener('compositionstart', () => {
+            isComposing = true;
+        });
+
+        todoInput.addEventListener('compositionend', () => {
+            isComposing = false;
+        });
+
+        // Keyboard event
+        todoInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey && !isComposing) {
+                e.preventDefault();
+                addTodo();
+            }
+        });
+
+        function addTodo() {
+            const text = todoInput.value.trim();
+            if (text) {
+                const todo = {
+                    id: Date.now(),
+                    text: text,
+                    completed: false
+                };
+                todos.push(todo);
+                todoInput.value = '';
+                todoInput.focus();
+                saveData();
+                renderTodos();
+            }
+        }
+
+        function toggleTodo(id) {
+            const todoIndex = todos.findIndex(t => t.id === id);
+            const completedIndex = completedTodos.findIndex(t => t.id === id);
+
+            if (todoIndex !== -1) {
+                const todo = todos.splice(todoIndex, 1)[0];
+                todo.completed = true;
+                completedTodos.push(todo);
+            } else if (completedIndex !== -1) {
+                const todo = completedTodos.splice(completedIndex, 1)[0];
+                todo.completed = false;
+                todos.push(todo);
+            }
+
+            saveData();
+            renderTodos();
+        }
+
+        function deleteAllCompleted() {
+            if (completedTodos.length > 0) {
+                if (confirm('完了済みのメモをすべて削除しますか？')) {
+                    completedTodos = [];
+                    saveData();
+                    renderTodos();
+                }
+            }
+        }
+
+        function renderTodos() {
+            // Render pending todos
+            if (todos.length === 0) {
+                pendingList.innerHTML = '<li class="empty-state">メモがありません</li>';
+            } else {
+                pendingList.innerHTML = todos.map((todo, index) => `
+                    <li draggable="true" data-id="${todo.id}" data-index="${index}" data-type="pending">
+                        <input 
+                            type="checkbox" 
+                            onchange="toggleTodo(${todo.id})"
+                            ${todo.completed ? 'checked' : ''}
+                        >
+                        <span class="todo-text">${escapeHtml(todo.text)}</span>
+                    </li>
+                `).join('');
+            }
+
+            // Render completed todos
+            if (completedTodos.length === 0) {
+                completedList.innerHTML = '<li class="empty-state">完了したメモがありません</li>';
+            } else {
+                completedList.innerHTML = completedTodos.map((todo, index) => `
+                    <li class="completed" draggable="true" data-id="${todo.id}" data-index="${index}" data-type="completed">
+                        <input 
+                            type="checkbox" 
+                            onchange="toggleTodo(${todo.id})"
+                            checked
+                        >
+                        <span class="todo-text">${escapeHtml(todo.text)}</span>
+                    </li>
+                `).join('');
+            }
+            
+            // Add drag and drop event listeners
+            setupDragAndDrop();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Drag and drop functionality
+        let draggedElement = null;
+        let draggedData = null;
+        
+        function setupDragAndDrop() {
+            const draggableItems = document.querySelectorAll('li[draggable="true"]');
+            
+            draggableItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragleave', handleDragLeave);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+        }
+        
+        function handleDragStart(e) {
+            draggedElement = this;
+            draggedData = {
+                id: parseInt(this.dataset.id),
+                index: parseInt(this.dataset.index),
+                type: this.dataset.type
+            };
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+        
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (this !== draggedElement && this.draggable) {
+                this.classList.add('drag-over');
+            }
+            
+            return false;
+        }
+        
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (this !== draggedElement && this.draggable) {
+                const dropData = {
+                    id: parseInt(this.dataset.id),
+                    index: parseInt(this.dataset.index),
+                    type: this.dataset.type
+                };
+                
+                // Reorder within the same list
+                if (draggedData.type === dropData.type) {
+                    const list = draggedData.type === 'pending' ? todos : completedTodos;
+                    const draggedItem = list[draggedData.index];
+                    
+                    // Remove from old position
+                    list.splice(draggedData.index, 1);
+                    
+                    // Calculate new index
+                    let newIndex = dropData.index;
+                    if (draggedData.index < dropData.index) {
+                        newIndex--;
+                    }
+                    
+                    // Insert at new position
+                    list.splice(newIndex, 0, draggedItem);
+                    
+                    saveData();
+                    renderTodos();
+                }
+            }
+            
+            return false;
+        }
+        
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+        
+        function handleDragEnd(e) {
+            const draggableItems = document.querySelectorAll('li[draggable="true"]');
+            draggableItems.forEach(item => {
+                item.classList.remove('dragging', 'drag-over');
+            });
+        }
+
+        // Initial load and render
+        setPageTitle();
+        loadData();
+        renderTodos();
+    </script>
+</body>
+</html>
