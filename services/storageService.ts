@@ -90,6 +90,10 @@ export async function deleteRecipeImage(
             if (error?.code === 'storage/object-not-found') {
                 continue;
             }
+            if (error?.code === 'storage/unauthorized') {
+                console.warn('Storage: 画像削除権限がありません:', error.message);
+                continue;
+            }
             console.error('Storage: 画像削除エラー:', error);
         }
     }

@@ -25,6 +25,7 @@ interface RecipeContextType {
     updateRecipe: (recipe: Recipe) => void;
     deleteRecipe: (id: string) => void;
     getRecipeById: (id: string) => Recipe | undefined;
+    importRecipes: (recipes: Omit<Recipe, 'id' | 'userId' | 'createdAt'>[]) => Promise<number>;
     isLoading: boolean;
 }
 
@@ -276,9 +277,36 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
         [recipes]
     );
 
+    // 複数のレシピを一括インポート（Firestoreに書き込み）
+    const importRecipes = useCallback(async (importData: Omit<Recipe, 'id' | 'userId' | 'createdAt'>[]): Promise<number> => {
+        if (!user) {
+            throw new Error('ユーザーがログインしていません');
+        }
+
+        try {
+            const recipesRef = collection(db, 'recipes');
+
+            const promises = importData.map(recipeData => {
+                const newRecipe = {
+                    ...recipeData,
+                    createdAt: new Date(),
+                };
+                return addDoc(recipesRef, recipeToDoc(newRecipe as Omit<Recipe, 'id'>, user.uid));
+            });
+
+            await Promise.all(promises);
+            console.log(`Firebase: ${promises.length}件のレシピをインポートしました`);
+
+            return promises.length;
+        } catch (error) {
+            console.error('Firebase レシピインポートエラー:', error);
+            throw error;
+        }
+    }, [user]);
+
     return (
         <RecipeContext.Provider
-            value={{ recipes, addRecipe, updateRecipe, deleteRecipe, getRecipeById, isLoading }}
+            value={{ recipes, addRecipe, updateRecipe, deleteRecipe, getRecipeById, importRecipes, isLoading }}
         >
             {children}
         </RecipeContext.Provider>
