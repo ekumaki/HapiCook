@@ -1,0 +1,7 @@
+refactor: Cooking Mode削除と常時点灯の自動化
+
+- レシピ詳細画面からCooking Mode（ダークモード、画像非表示トグル等）を削除
+- レシピ詳細を開いている間は常に画面が消灯しないように useKeepAwake() を適用
+- 不要になった Colors.accent を削除
+- 新規作成機能実装プランの進捗を更新
+- Google Sign-In 実装プランのドキュメントを追加

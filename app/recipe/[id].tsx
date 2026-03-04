@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Image,
     SafeAreaView,
@@ -21,11 +21,10 @@ export default function RecipeDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
     const { getRecipeById } = useRecipes();
-    const [cookingMode, setCookingMode] = useState(false);
     const { width } = useWindowDimensions();
     const isWide = width > 425;
 
-    // Cooking Mode時は画面を常時オンに
+    // 画面を常時オンに
     useKeepAwake();
 
     const recipe = getRecipeById(id);
@@ -38,9 +37,9 @@ export default function RecipeDetailScreen() {
         );
     }
 
-    const bgColor = cookingMode ? Colors.dark.background : Colors.surface;
-    const textColor = cookingMode ? Colors.dark.text : Colors.text;
-    const secondaryColor = cookingMode ? Colors.dark.textSecondary : Colors.textSecondary;
+    const bgColor = Colors.surface;
+    const textColor = Colors.text;
+    const secondaryColor = Colors.textSecondary;
 
     // Shared: Section header with 材料 title, servings, time, calories
     const renderSectionHeader = () => (
@@ -49,19 +48,19 @@ export default function RecipeDetailScreen() {
                 材料
             </Text>
             <View style={styles.headerMeta}>
-                <View style={[styles.metaBadge, cookingMode && styles.metaBadgeDark]}>
+                <View style={styles.metaBadge}>
                     <Text style={styles.metaEmoji}>🍽️</Text>
                     <Text style={[styles.metaValue, { color: textColor }]}>
                         {recipe.servings || '- 人前'}
                     </Text>
                 </View>
-                <View style={[styles.metaBadge, cookingMode && styles.metaBadgeDark]}>
+                <View style={styles.metaBadge}>
                     <Text style={styles.metaEmoji}>🕒</Text>
                     <Text style={[styles.metaValue, { color: textColor }]}>
                         {recipe.metadata.estimatedTime?.trim() ? recipe.metadata.estimatedTime : '- 分'}
                     </Text>
                 </View>
-                <View style={[styles.metaBadge, cookingMode && styles.metaBadgeDark]}>
+                <View style={styles.metaBadge}>
                     <Text style={styles.metaEmoji}>🔥</Text>
                     <Text style={[styles.metaValue, { color: textColor }]}>
                         {recipe.metadata.calories?.trim() ? recipe.metadata.calories : '- kcal'}
@@ -93,12 +92,7 @@ export default function RecipeDetailScreen() {
         <View style={styles.stepsList}>
             {recipe.steps.map((step, index) => (
                 <View key={index} style={styles.stepItem}>
-                    <View
-                        style={[
-                            styles.stepNumber,
-                            cookingMode && styles.stepNumberDark,
-                        ]}
-                    >
+                    <View style={styles.stepNumber}>
                         <Text style={styles.stepNumberText}>{index + 1}</Text>
                     </View>
                     <Text style={[styles.stepText, { color: textColor }]}>
@@ -125,9 +119,9 @@ export default function RecipeDetailScreen() {
                 options={{
                     title: recipe.title,
                     headerStyle: {
-                        backgroundColor: cookingMode ? Colors.dark.surface : Colors.surface,
+                        backgroundColor: Colors.surface,
                     },
-                    headerTintColor: cookingMode ? Colors.dark.text : Colors.text,
+                    headerTintColor: Colors.text,
                     headerRight: () => (
                         <View style={styles.headerRight}>
                             <TouchableOpacity
@@ -136,32 +130,11 @@ export default function RecipeDetailScreen() {
                             >
                                 <Ionicons name="pencil" size={20} color={Colors.primary} />
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => setCookingMode(!cookingMode)}
-                                style={[
-                                    styles.cookingModeButton,
-                                    cookingMode && styles.cookingModeButtonActive,
-                                ]}
-                            >
-                                <Ionicons
-                                    name={cookingMode ? 'sunny' : 'moon'}
-                                    size={14}
-                                    color={cookingMode ? '#fff' : Colors.textSecondary}
-                                />
-                                <Text
-                                    style={[
-                                        styles.cookingModeText,
-                                        cookingMode && styles.cookingModeTextActive,
-                                    ]}
-                                >
-                                    {cookingMode ? 'COOKING' : 'OFF'}
-                                </Text>
-                            </TouchableOpacity>
                         </View>
                     ),
                 }}
             />
-            <StatusBar barStyle={cookingMode ? 'light-content' : 'dark-content'} />
+            <StatusBar barStyle="dark-content" />
 
             <View style={[styles.container, { backgroundColor: bgColor }]}>
                 {isWide ? (
@@ -169,23 +142,21 @@ export default function RecipeDetailScreen() {
                     <View style={styles.splitContainer}>
                         {/* Left column: scrollable independently */}
                         <ScrollView
-                            style={[styles.splitLeft, cookingMode && styles.sectionDark]}
+                            style={styles.splitLeft}
                             contentContainerStyle={styles.splitLeftContent}
                         >
                             {renderSectionHeader()}
                             {renderIngredients()}
 
                             {/* Photo below ingredients (wide layout) */}
-                            {!cookingMode && (
-                                <View style={styles.splitImageContainer}>
-                                    <Image source={{ uri: recipe.image }} style={styles.splitImage} />
-                                </View>
-                            )}
+                            <View style={styles.splitImageContainer}>
+                                <Image source={{ uri: recipe.image }} style={styles.splitImage} />
+                            </View>
                         </ScrollView>
 
                         {/* Right column: scrollable independently */}
                         <ScrollView
-                            style={[styles.splitRight, cookingMode && styles.sectionDark]}
+                            style={styles.splitRight}
                             contentContainerStyle={styles.splitRightContent}
                         >
                             <Text style={[styles.sectionTitle, { color: Colors.primary }]}>
@@ -199,20 +170,18 @@ export default function RecipeDetailScreen() {
                     /* ===== Mobile layout: single scroll ===== */
                     <ScrollView style={styles.content}>
                         {/* Hero Image (mobile only - shown at top) */}
-                        {!cookingMode && (
-                            <View style={styles.heroImageContainer}>
-                                <Image source={{ uri: recipe.image }} style={styles.heroImage} />
-                            </View>
-                        )}
+                        <View style={styles.heroImageContainer}>
+                            <Image source={{ uri: recipe.image }} style={styles.heroImage} />
+                        </View>
 
                         {/* Ingredients Section */}
-                        <View style={[styles.section, cookingMode && styles.sectionDark]}>
+                        <View style={styles.section}>
                             {renderSectionHeader()}
                             {renderIngredients()}
                         </View>
 
                         {/* Steps Section */}
-                        <View style={[styles.section, styles.stepsSection, cookingMode && styles.sectionDark]}>
+                        <View style={[styles.section, styles.stepsSection]}>
                             <Text style={[styles.sectionTitle, { color: Colors.primary }]}>
                                 作り方
                             </Text>
@@ -242,26 +211,6 @@ const styles = StyleSheet.create({
     headerButton: {
         padding: 8,
     },
-    cookingModeButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 16,
-        backgroundColor: Colors.borderLight,
-        gap: 4,
-    },
-    cookingModeButtonActive: {
-        backgroundColor: Colors.accent,
-    },
-    cookingModeText: {
-        fontSize: 11,
-        fontWeight: 'bold',
-        color: Colors.textSecondary,
-    },
-    cookingModeTextActive: {
-        color: '#fff',
-    },
     heroImageContainer: {
         width: '100%',
         aspectRatio: 4 / 3,
@@ -286,10 +235,6 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.surface,
         borderBottomWidth: 1,
         borderBottomColor: Colors.borderLight,
-    },
-    sectionDark: {
-        backgroundColor: Colors.dark.surface,
-        borderBottomColor: Colors.dark.border,
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -342,10 +287,6 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.surface,
         gap: 4,
     },
-    metaBadgeDark: {
-        borderColor: Colors.dark.border,
-        backgroundColor: Colors.dark.background,
-    },
     metaEmoji: {
         fontSize: 12,
     },
@@ -393,9 +334,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 14,
         flexShrink: 0,
-    },
-    stepNumberDark: {
-        backgroundColor: Colors.primary,
     },
     stepNumberText: {
         fontSize: 14,

@@ -8,9 +8,6 @@ export const Colors = {
   primaryDark: '#EA580C',   // オレンジ 600
   primaryBg: '#FFF7ED',     // オレンジ 50
 
-  // Accent
-  accent: '#10B981',        // エメラルド (Cooking Mode)
-
   // Neutral
   text: '#1F2937',          // グレー 800
   textSecondary: '#6B7280', // グレー 500
