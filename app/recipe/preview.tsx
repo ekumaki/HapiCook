@@ -217,6 +217,15 @@ export default function RecipePreviewScreen() {
                             />
                         </View>
                     </View>
+
+                    <Text style={styles.label}>タグ (カンマ区切り)</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={(formData.tags || []).join(', ')}
+                        onChangeText={(v) => updateField('tags', v ? v.split(',').map((t) => t.trim()).filter(Boolean) : [])}
+                        placeholder="例: 豚肉, 時短, 和食"
+                        placeholderTextColor={Colors.textLight}
+                    />
                 </View>
 
                 {/* Ingredients */}

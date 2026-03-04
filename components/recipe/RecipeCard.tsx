@@ -36,13 +36,15 @@ export function RecipeCard({ recipe, onPress }: RecipeCardProps) {
                     <Text style={styles.title} numberOfLines={2}>
                         {recipe.title}
                     </Text>
-                    {/* Tags: overflow hidden, no wrap to cut off excess */}
+                    {/* Tags: up to 2 lines, hidden overflow */}
                     <View style={styles.tags}>
-                        {recipe.tags.slice(0, 3).map((tag, index) => (
-                            <View key={index} style={styles.tag}>
-                                <Text style={styles.tagText} numberOfLines={1}>#{tag}</Text>
-                            </View>
-                        ))}
+                        {(recipe.tags || [])
+                            .filter(t => t.trim() !== '')
+                            .map((tag, index) => (
+                                <View key={index} style={styles.tag}>
+                                    <Text style={styles.tagText} numberOfLines={1}>#{tag}</Text>
+                                </View>
+                            ))}
                     </View>
                 </View>
 
@@ -106,9 +108,10 @@ const styles = StyleSheet.create({
     },
     tags: {
         flexDirection: 'row',
-        flexWrap: 'nowrap',
+        flexWrap: 'wrap',
         gap: 4,
         overflow: 'hidden',
+        maxHeight: 38, // 約2行分（タグの高さ＋ギャップ）に制限して3行目以降を隠す
     },
     tag: {
         backgroundColor: Colors.borderLight,
