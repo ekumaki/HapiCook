@@ -111,7 +111,13 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
                 await loadSampleRecipes(user.uid);
                 // サンプル投入後は onSnapshot が再度呼ばれるので、ここでは何もしない
             } else {
-                setRecipes(loadedRecipes);
+                setRecipes((prev) => {
+                    // データが変わっていない場合は再レンダリングを防止するため、以前の参照を返す
+                    if (prev.length === loadedRecipes.length && JSON.stringify(prev) === JSON.stringify(loadedRecipes)) {
+                        return prev;
+                    }
+                    return loadedRecipes;
+                });
                 setIsLoading(false);
             }
         }, (error) => {

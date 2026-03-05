@@ -113,6 +113,17 @@ export default function RecipeDetailScreen() {
         </View>
     );
 
+    const headerRight = React.useMemo(() => () => (
+        <View style={styles.headerRight}>
+            <TouchableOpacity
+                onPress={() => router.push(`/recipe/edit/${id}`)}
+                style={styles.headerButton}
+            >
+                <Ionicons name="pencil" size={20} color={Colors.primary} />
+            </TouchableOpacity>
+        </View>
+    ), [id, router]);
+
     return (
         <>
             <Stack.Screen
@@ -122,16 +133,7 @@ export default function RecipeDetailScreen() {
                         backgroundColor: Colors.surface,
                     },
                     headerTintColor: Colors.text,
-                    headerRight: () => (
-                        <View style={styles.headerRight}>
-                            <TouchableOpacity
-                                onPress={() => router.push(`/recipe/edit/${id}`)}
-                                style={styles.headerButton}
-                            >
-                                <Ionicons name="pencil" size={20} color={Colors.primary} />
-                            </TouchableOpacity>
-                        </View>
-                    ),
+                    headerRight,
                 }}
             />
             <StatusBar barStyle="dark-content" />
