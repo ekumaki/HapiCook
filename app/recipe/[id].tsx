@@ -21,8 +21,9 @@ export default function RecipeDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
     const { getRecipeById } = useRecipes();
-    const { width } = useWindowDimensions();
+    const { width, height } = useWindowDimensions();
     const isWide = width > 425;
+    const isLandscape = width > height;
 
     // 画面を常時オンに
     useKeepAwake();
@@ -123,7 +124,7 @@ export default function RecipeDetailScreen() {
                         backgroundColor: Colors.surface,
                     },
                     headerTintColor: Colors.text,
-                    headerBackTitle: '',
+                    headerBackTitle: '戻る',
                     headerRight,
                 }}
             />
@@ -136,7 +137,7 @@ export default function RecipeDetailScreen() {
                         {/* Left column: scrollable independently */}
                         <ScrollView
                             style={styles.splitLeft}
-                            contentContainerStyle={styles.splitLeftContent}
+                            contentContainerStyle={[styles.splitLeftContent, isLandscape && styles.splitContentCompact]}
                         >
                             {renderSectionHeader()}
                             {renderIngredients()}
@@ -150,7 +151,7 @@ export default function RecipeDetailScreen() {
                         {/* Right column: scrollable independently */}
                         <ScrollView
                             style={styles.splitRight}
-                            contentContainerStyle={styles.splitRightContent}
+                            contentContainerStyle={[styles.splitRightContent, isLandscape && styles.splitContentCompact]}
                         >
                             <Text style={[styles.sectionTitle, { color: Colors.primary }]}>
                                 作り方
@@ -206,6 +207,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+
     heroImageContainer: {
         width: '100%',
         aspectRatio: 4 / 3,
@@ -313,6 +315,10 @@ const styles = StyleSheet.create({
     splitRightContent: {
         padding: 20,
         paddingBottom: 40,
+    },
+    splitContentCompact: {
+        padding: 12,
+        paddingBottom: 20,
     },
     stepsList: {
         gap: 20,

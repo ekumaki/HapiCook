@@ -3,7 +3,7 @@
     "name": "hapicook",
     "slug": "hapicook",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "hapicook",
     "userInterfaceStyle": "automatic",

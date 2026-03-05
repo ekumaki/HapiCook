@@ -79,11 +79,11 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === 'dark' ? HapiCookDarkTheme : HapiCookLightTheme}>
       <RecipeProvider>
         <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: '戻る' }} />
           <Stack.Screen
             name="recipe/[id]"
             options={{
-              headerBackTitle: '',
+              headerBackTitle: '戻る',
               headerTitleStyle: { fontWeight: 'bold' },
             }}
           />
