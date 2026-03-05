@@ -159,13 +159,18 @@ export default function RecipeListScreen() {
       />
 
       {/* FAB (Add Button) */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setShowAddMenu(true)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="add" size={28} color="#fff" />
-      </TouchableOpacity>
+      <View style={styles.fabContainer}>
+        <View style={styles.fabLabelContainer}>
+          <Text style={styles.fabLabel}>レシピ追加</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setShowAddMenu(true)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="add" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
       {/* Add Menu Modal */}
       <AddMenuModal
@@ -256,10 +261,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textLight,
   },
-  fab: {
+  fabContainer: {
     position: 'absolute',
     right: 20,
     bottom: 24,
+    alignItems: 'center',
+  },
+  fabLabelContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginBottom: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: Colors.primaryLight,
+  },
+  fabLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: Colors.primary,
+  },
+  fab: {
     width: 56,
     height: 56,
     borderRadius: 28,

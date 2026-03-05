@@ -83,7 +83,7 @@ function RootLayoutNav() {
           <Stack.Screen
             name="recipe/[id]"
             options={{
-              headerBackTitle: '戻る',
+              headerBackTitle: '',
               headerTitleStyle: { fontWeight: 'bold' },
             }}
           />

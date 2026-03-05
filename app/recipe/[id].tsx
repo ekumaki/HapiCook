@@ -11,7 +11,7 @@ import {
     Text,
     TouchableOpacity,
     useWindowDimensions,
-    View,
+    View
 } from 'react-native';
 
 import { Colors } from '@/constants/Colors';
@@ -103,25 +103,15 @@ export default function RecipeDetailScreen() {
         </View>
     );
 
-    // Shared: Footer
-    const renderFooter = () => (
-        <View style={styles.footer}>
-            <View style={[styles.footerLine, { backgroundColor: secondaryColor }]} />
-            <Text style={[styles.footerText, { color: secondaryColor }]}>
-                美味しくできますように！
-            </Text>
-        </View>
-    );
+
 
     const headerRight = React.useMemo(() => () => (
-        <View style={styles.headerRight}>
-            <TouchableOpacity
-                onPress={() => router.push(`/recipe/edit/${id}`)}
-                style={styles.headerButton}
-            >
-                <Ionicons name="pencil" size={20} color={Colors.primary} />
-            </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+            onPress={() => router.push(`/recipe/edit/${id}`)}
+            style={styles.headerButton}
+        >
+            <Ionicons name="pencil" size={26} color={Colors.primary} />
+        </TouchableOpacity>
     ), [id, router]);
 
     return (
@@ -133,6 +123,7 @@ export default function RecipeDetailScreen() {
                         backgroundColor: Colors.surface,
                     },
                     headerTintColor: Colors.text,
+                    headerBackTitle: '',
                     headerRight,
                 }}
             />
@@ -165,17 +156,12 @@ export default function RecipeDetailScreen() {
                                 作り方
                             </Text>
                             {renderSteps()}
-                            {renderFooter()}
+
                         </ScrollView>
                     </View>
                 ) : (
                     /* ===== Mobile layout: single scroll ===== */
-                    <ScrollView style={styles.content}>
-                        {/* Hero Image (mobile only - shown at top) */}
-                        <View style={styles.heroImageContainer}>
-                            <Image source={{ uri: recipe.image }} style={styles.heroImage} />
-                        </View>
-
+                    <ScrollView style={styles.content} contentContainerStyle={styles.mobileContentContainer}>
                         {/* Ingredients Section */}
                         <View style={styles.section}>
                             {renderSectionHeader()}
@@ -188,7 +174,11 @@ export default function RecipeDetailScreen() {
                                 作り方
                             </Text>
                             {renderSteps()}
-                            {renderFooter()}
+                        </View>
+
+                        {/* Hero Image (mobile - shown at bottom) */}
+                        <View style={styles.heroImageContainer}>
+                            <Image source={{ uri: recipe.image }} style={styles.heroImage} />
                         </View>
                     </ScrollView>
                 )}
@@ -205,13 +195,16 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
     },
-    headerRight: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
+    mobileContentContainer: {
+        paddingBottom: 20,
     },
     headerButton: {
-        padding: 8,
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     heroImageContainer: {
         width: '100%',
@@ -347,20 +340,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         lineHeight: 24,
     },
-    footer: {
-        alignItems: 'center',
-        marginTop: 40,
-        marginBottom: 20,
-    },
-    footerLine: {
-        width: 60,
-        height: 3,
-        borderRadius: 2,
-        marginBottom: 12,
-    },
-    footerText: {
-        fontSize: 13,
-    },
+
     errorText: {
         textAlign: 'center',
         marginTop: 40,
