@@ -154,7 +154,11 @@ export default function RecipeEditScreen() {
                 }}
             />
 
-            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.content}
+                keyboardShouldPersistTaps="handled"
+            >
                 {/* Image Section */}
                 <TouchableOpacity style={styles.imageSection} onPress={handleChangeImage}>
                     <Image source={{ uri: formData.image }} style={styles.image} />
@@ -304,7 +308,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
     },
     content: {
-        paddingBottom: 40,
+        paddingBottom: 80,
     },
     headerCancel: {
         fontSize: 15,
