@@ -30,6 +30,15 @@ export default function RecipeDetailScreen() {
 
     const recipe = getRecipeById(id);
 
+    const headerRight = React.useMemo(() => () => (
+        <TouchableOpacity
+            onPress={() => router.push(`/recipe/edit/${id}`)}
+            style={styles.headerButton}
+        >
+            <Ionicons name="pencil" size={26} color={Colors.primary} />
+        </TouchableOpacity>
+    ), [id, router]);
+
     if (!recipe) {
         return (
             <SafeAreaView style={styles.container}>
@@ -103,17 +112,6 @@ export default function RecipeDetailScreen() {
             ))}
         </View>
     );
-
-
-
-    const headerRight = React.useMemo(() => () => (
-        <TouchableOpacity
-            onPress={() => router.push(`/recipe/edit/${id}`)}
-            style={styles.headerButton}
-        >
-            <Ionicons name="pencil" size={26} color={Colors.primary} />
-        </TouchableOpacity>
-    ), [id, router]);
 
     return (
         <>
