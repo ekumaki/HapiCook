@@ -45,11 +45,14 @@ export default function RecipeListScreen() {
     });
   };
 
-  const handleAddOption = (option: 'photo' | 'camera' | 'link' | 'text' | 'manual') => {
+  const handleAddOption = (option: 'photo' | 'camera' | 'link' | 'text' | 'manual' | 'ai-chat') => {
     setShowAddMenu(false);
     switch (option) {
       case 'manual':
         router.push('/recipe/new');
+        break;
+      case 'ai-chat':
+        router.push('/recipe/ai-chat');
         break;
       case 'link':
         router.push('/recipe/add-link');

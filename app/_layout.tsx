@@ -7,8 +7,10 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
+import { LoginGate } from '@/components/auth/LoginGate';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { RecipeProvider } from '@/contexts/RecipeContext';
 
 export {
@@ -79,8 +81,10 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? HapiCookDarkTheme : HapiCookLightTheme}>
-      <RecipeProvider>
-        <Stack>
+      <AuthProvider>
+        <LoginGate>
+          <RecipeProvider>
+            <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: '戻る' }} />
           <Stack.Screen
             name="recipe/[id]"
@@ -118,6 +122,13 @@ function RootLayoutNav() {
             }}
           />
           <Stack.Screen
+            name="recipe/ai-chat"
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+            }}
+          />
+          <Stack.Screen
             name="recipe/preview"
             options={{
               presentation: 'card',
@@ -125,8 +136,10 @@ function RootLayoutNav() {
             }}
           />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
-      </RecipeProvider>
+            </Stack>
+          </RecipeProvider>
+        </LoginGate>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// 個人利用モード: 許可されたGoogleアカウント（メールアドレス）のみアクセス可能
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isOwnerSignedIn() {
+      return request.auth != null
+        && request.auth.token.email == 'jetblack13k13@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    // レシピ画像: users/{uid}/recipes/ 配下のみ、本人だけが読み書き可能
+    match /users/{userId}/recipes/{fileName} {
+      allow read: if isOwnerSignedIn() && request.auth.uid == userId;
+      allow delete: if isOwnerSignedIn() && request.auth.uid == userId;
+      allow create, update: if isOwnerSignedIn()
+        && request.auth.uid == userId
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // その他はすべて拒否
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

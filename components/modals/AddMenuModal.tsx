@@ -6,10 +6,16 @@ import { Colors } from '../../constants/Colors';
 interface AddMenuModalProps {
     visible: boolean;
     onClose: () => void;
-    onSelectOption: (option: 'photo' | 'camera' | 'link' | 'text' | 'manual') => void;
+    onSelectOption: (option: 'photo' | 'camera' | 'link' | 'text' | 'manual' | 'ai-chat') => void;
 }
 
 const menuItems = [
+    {
+        id: 'ai-chat' as const,
+        icon: 'chatbubbles-outline' as const,
+        label: 'AIと相談して作る',
+        desc: '食材や気分から一緒にレシピを考える'
+    },
     {
         id: 'text' as const,
         icon: 'document-text-outline' as const,

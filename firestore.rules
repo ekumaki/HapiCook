@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// 個人利用モード: 許可されたGoogleアカウント（メールアドレス）のみアクセス可能
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwnerSignedIn() {
+      return request.auth != null
+        && request.auth.token.email == 'jetblack13k13@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    // レシピ: 本人所有のドキュメントのみ読み書き可能
+    match /recipes/{recipeId} {
+      allow read: if isOwnerSignedIn()
+        && resource.data.userId == request.auth.uid;
+      allow create: if isOwnerSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if isOwnerSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if isOwnerSignedIn()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // ユーザー情報: 本人のドキュメントのみ
+    match /users/{userId} {
+      allow read, write: if isOwnerSignedIn()
+        && request.auth.uid == userId;
+    }
+
+    // その他はすべて拒否
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,6 +1,6 @@
-import { auth, db } from '@/services/firebaseConfig';
+import { useAuth } from '@/contexts/AuthContext';
+import { db } from '@/services/firebaseConfig';
 import { deleteRecipeImage, isLocalImageUri, uploadRecipeImage } from '@/services/storageService';
-import { onAuthStateChanged, signInAnonymously, User } from 'firebase/auth';
 import {
     addDoc,
     collection,
@@ -64,29 +64,20 @@ function recipeToDoc(recipe: Omit<Recipe, 'id'>, userId: string) {
 
 export function RecipeProvider({ children }: { children: React.ReactNode }) {
     const [recipes, setRecipes] = useState<Recipe[]>([]);
-    const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    // 認証状態は AuthContext で管理
+    const { user, isAllowed } = useAuth();
 
-    // アプリ起動時に匿名ログインを実行
+    // 許可ユーザーがログインしたら Firestore からレシピをリアルタイム取得
+    // （個人利用モード: 未許可ユーザーはセキュリティルールで拒否されるため購読しない）
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            if (currentUser) {
-                console.log('Firebase: 匿名ログイン成功 (UID):', currentUser.uid);
-                setUser(currentUser);
-            } else {
-                console.log('Firebase: ログインしていません。匿名ログインを開始します...');
-                signInAnonymously(auth).catch((error) => {
-                    console.error('Firebase 匿名ログインエラー:', error);
-                });
-            }
-        });
+        if (!user || !isAllowed) {
+            setRecipes([]);
+            return;
+        }
 
-        return () => unsubscribe();
-    }, []);
-
-    // ユーザーがログインしたら Firestore からレシピをリアルタイム取得
-    useEffect(() => {
-        if (!user) return;
+        // アカウント切り替え時にもサンプル投入判定が働くようリセット
+        setIsLoading(true);
 
         const recipesRef = collection(db, 'recipes');
         const q = query(
@@ -126,7 +117,7 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
         });
 
         return () => unsubscribe();
-    }, [user]);
+    }, [user, isAllowed]);
 
     // サンプルレシピを Firestore に投入する関数
     const loadSampleRecipes = async (userId: string) => {

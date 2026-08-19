@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRecipes } from '@/contexts/RecipeContext';
 import { exportRecipesData, importRecipesData } from '@/services/recipeExportImportService';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,19 +8,23 @@ import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, Touch
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
+    const { recipes, importRecipes } = useRecipes();
+    const { user, displayName, signOut } = useAuth();
+    const [isProcessing, setIsProcessing] = useState(false);
+
     const settingsSections = [
         {
             title: 'アカウント',
             items: [
-                { icon: 'person-outline', label: 'プロフィール', value: 'ゲスト' },
-                { icon: 'diamond-outline', label: 'プレミアム会員', value: 'Free' },
+                { icon: 'person-outline', label: 'プロフィール', value: displayName },
+                { icon: 'mail-outline', label: 'メールアドレス', value: user?.email || '-' },
+                { id: 'signout', icon: 'log-out-outline', label: 'サインアウト' },
             ],
         },
         {
             title: '使用状況',
             items: [
-                { icon: 'restaurant-outline', label: '登録レシピ数', value: '3 / 50' },
-                { icon: 'sparkles-outline', label: 'AI解析 (今月)', value: '0 / 10' },
+                { icon: 'restaurant-outline', label: '登録レシピ数', value: `${recipes.length} 件` },
             ],
         },
         {
@@ -47,8 +52,26 @@ export default function SettingsScreen() {
         },
     ];
 
-    const { recipes, importRecipes } = useRecipes();
-    const [isProcessing, setIsProcessing] = useState(false);
+    const handleSignOut = async () => {
+        const doSignOut = async () => {
+            try {
+                await signOut();
+            } catch (error: any) {
+                console.error('サインアウトエラー:', error);
+            }
+        };
+
+        if (Platform.OS === 'web') {
+            if (window.confirm('サインアウトしますか？')) {
+                await doSignOut();
+            }
+        } else {
+            Alert.alert('サインアウト', 'サインアウトしますか？', [
+                { text: 'キャンセル', style: 'cancel' },
+                { text: 'サインアウト', style: 'destructive', onPress: doSignOut },
+            ]);
+        }
+    };
 
     const handleExport = async () => {
         try {
@@ -119,6 +142,8 @@ export default function SettingsScreen() {
             handleExport();
         } else if (item.id === 'import') {
             handleImport();
+        } else if (item.id === 'signout') {
+            handleSignOut();
         }
     };
 
