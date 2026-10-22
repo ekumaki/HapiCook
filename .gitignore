@@ -46,3 +46,6 @@ yarn-error.*
 
 # Logs
 *.log
+
+# Functions のパラメータ（秘密情報は含めない。APIキーは Secret Manager）
+!functions/.env

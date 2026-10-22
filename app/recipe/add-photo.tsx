@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/Colors';
-import { extractRecipeFromImage } from '@/services/geminiService';
+import { extractRecipeFromImage } from '@/services/aiService';
 
 type SourceMode = 'photo' | 'camera';
 

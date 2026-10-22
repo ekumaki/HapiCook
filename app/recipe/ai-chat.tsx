@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/Colors';
-import { ChatMessage, finalizeRecipeFromChat, sendRecipeChatMessage } from '@/services/geminiService';
+import { ChatMessage, finalizeRecipeFromChat, sendRecipeChatMessage } from '@/services/aiService';
 
 // 画面表示用のメッセージ（最初の挨拶はAPIの履歴には含めない）
 interface UiMessage extends ChatMessage {

@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/Colors';
-import { extractRecipeFromText } from '@/services/geminiService';
+import { extractRecipeFromText } from '@/services/aiService';
 
 export default function AddTextScreen() {
     const router = useRouter();

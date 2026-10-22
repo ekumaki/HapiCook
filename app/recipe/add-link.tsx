@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/Colors';
-import { extractRecipeFromUrl } from '@/services/geminiService';
+import { extractRecipeFromUrl } from '@/services/aiService';
 
 export default function AddLinkScreen() {
     const router = useRouter();

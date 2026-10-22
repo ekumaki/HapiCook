@@ -1,0 +1,7 @@
+node_modules/
+lib/
+*.log
+# 秘密情報はここに置かない（Secret Manager を使う）
+.env.local
+.env.*.local
+.secret.local

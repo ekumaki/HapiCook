@@ -36,5 +36,5 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 // 他のファイルから使えるようにエクスポート
-export { auth, db, storage };
+export { app, auth, db, storage };
 
